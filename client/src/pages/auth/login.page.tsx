@@ -1,6 +1,7 @@
 import React, { useState, ChangeEvent, FormEvent } from "react";
 import axios from "axios";
 import { NavLink } from "react-router-dom";
+import { showToastError, showToastSuccess } from "../../utils/toast";
 interface Props {}
 
 interface FormData {
@@ -60,11 +61,12 @@ const LoginPage: React.FC<Props> = (props: Props) => {
       const response = await axios.post("your-backend-api-endpoint", formData);
 
       if (response.status === 200) {
-        console.log("Login successful");
+        showToastSuccess("Login successful");
       } else {
-        console.error("Login failed");
+        showToastError("Login failed");
       }
     } catch (error) {
+      showToastError("Something went wrong");
       console.error("Error during login:", error);
     }
   };

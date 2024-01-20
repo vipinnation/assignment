@@ -1,6 +1,7 @@
 import React, { useState, ChangeEvent, FormEvent } from "react";
 import axios from "axios";
 import { NavLink } from "react-router-dom";
+import { showToastError, showToastSuccess } from "../../utils/toast";
 
 interface Props {}
 
@@ -81,11 +82,12 @@ const RegisterPage: React.FC<Props> = (props: Props) => {
       const response = await axios.post("your-backend-api-endpoint", formData);
 
       if (response.status === 200) {
-        console.log("Registration successful");
+        showToastSuccess("Registration successful");
       } else {
-        console.error("Registration failed");
+        showToastError("Registration failed");
       }
     } catch (error) {
+      showToastError("Registration failed");
       console.error("Error during registration:", error);
     }
   };

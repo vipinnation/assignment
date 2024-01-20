@@ -1,5 +1,8 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
+import apis from "../../constants/apis";
+import { redirect } from "react-router-dom";
+import { showToastSuccess } from "../../utils/toast";
 
 interface SavedItem {
   _id: string;
@@ -18,9 +21,7 @@ const TaskPage: React.FC = () => {
   useEffect(() => {
     const fetchSavedItems = async () => {
       try {
-        const response = await axios.get(
-          "your-backend-api-endpoint/saved-items"
-        ); // Replace with your actual API endpoint
+        const response = await axios.get(apis.task);
         setSavedItems(response.data);
       } catch (error) {
         console.error("Error fetching saved items:", error);
@@ -28,21 +29,20 @@ const TaskPage: React.FC = () => {
     };
 
     fetchSavedItems();
-  }, []); // Empty dependency array ensures this effect runs once on component mount
+  }, []);
 
   const handleEdit = (itemId: string) => {
-    // Handle edit action (redirect to edit page or show modal, etc.)
     console.log(`Edit item with ID: ${itemId}`);
+    redirect("/edit-task" + itemId);
   };
 
   const handleDelete = async (itemId: string) => {
-    // Handle delete action (send delete request to backend, update UI, etc.)
     try {
-      await axios.delete(`your-backend-api-endpoint/saved-items/${itemId}`);
+      await axios.delete(`${apis.task}/${itemId}`);
       setSavedItems((prevItems) =>
         prevItems.filter((item) => item._id !== itemId)
       );
-      console.log(`Deleted item with ID: ${itemId}`);
+      showToastSuccess(`Deleted item with ID: ${itemId}`);
     } catch (error) {
       console.error("Error deleting item:", error);
     }

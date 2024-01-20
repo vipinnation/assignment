@@ -1,10 +1,8 @@
 import React, { useState, ChangeEvent, FormEvent, useEffect } from "react";
 import axios from "axios";
 import { redirect, useParams } from "react-router-dom";
-
-interface RouteParams {
-  id: string;
-}
+import apis from "../../constants/apis";
+import { showToastError, showToastSuccess } from "../../utils/toast";
 
 interface Props {}
 
@@ -20,7 +18,12 @@ interface FormData {
 
 interface Errors {
   url: string;
+  request_body: string;
+  headers: string;
+  token: string;
   scheduled_time: string;
+  retries: string;
+  max_retries: string;
 }
 
 const CreateTaskPage: React.FC<Props> = (props: Props) => {
@@ -38,13 +41,18 @@ const CreateTaskPage: React.FC<Props> = (props: Props) => {
 
   const [errors, setErrors] = useState<Errors>({
     url: "",
+    request_body: "",
+    headers: "",
+    token: "",
     scheduled_time: "",
+    retries: "",
+    max_retries: "",
   });
 
   useEffect(() => {
     if (id) {
       axios
-        .get(`your-backend-api-endpoint/${id}`)
+        .get(`${apis.task}/${id}`)
         .then((response) => {
           const taskData = response.data;
           setFormData(taskData);
@@ -54,6 +62,25 @@ const CreateTaskPage: React.FC<Props> = (props: Props) => {
         });
     }
   }, [id]);
+
+  const validateForm = (): boolean => {
+    let valid = true;
+
+    if (formData.url.trim() === "") {
+      setErrors((prevErrors) => ({
+        ...prevErrors,
+        url: "URL is required",
+      }));
+      valid = false;
+    } else {
+      setErrors((prevErrors) => ({
+        ...prevErrors,
+        url: "",
+      }));
+    }
+
+    return valid;
+  };
 
   const handleInputChange = (
     e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
@@ -73,46 +100,28 @@ const CreateTaskPage: React.FC<Props> = (props: Props) => {
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
 
-    if (formData.url.trim() === "") {
-      setErrors((prevErrors) => ({
-        ...prevErrors,
-        url: "URL is required",
-      }));
-      return;
-    }
-
-    if (formData.scheduled_time.trim() === "") {
-      setErrors((prevErrors) => ({
-        ...prevErrors,
-        scheduled_time: "Scheduled Time is required",
-      }));
+    if (!validateForm()) {
       return;
     }
 
     try {
       if (id) {
-        const response = await axios.put(
-          `your-backend-api-endpoint/${id}`,
-          formData
-        );
+        const response = await axios.put(`${apis.task}/${id}`, formData);
 
         if (response.status === 200) {
-          console.log("Task updated successfully");
+          showToastSuccess("Task updated successfully");
           redirect("/");
         } else {
-          console.error("Task update failed");
+          showToastError("Task update failed");
         }
       } else {
-        const response = await axios.post(
-          "your-backend-api-endpoint",
-          formData
-        );
+        const response = await axios.post(apis.task, formData);
 
         if (response.status === 201) {
-          console.log("Task created successfully");
+          showToastSuccess("Task created successfully");
           redirect("/");
         } else {
-          console.error("Task creation failed");
+          showToastError("Task creation failed");
         }
       }
     } catch (error) {
@@ -154,7 +163,146 @@ const CreateTaskPage: React.FC<Props> = (props: Props) => {
             </div>
           </div>
 
-          {/* Other form fields go here... */}
+          <div>
+            <label
+              htmlFor="request_body"
+              className="block text-sm font-medium leading-6 text-gray-900"
+            >
+              Request Body
+            </label>
+            <div className="mt-2">
+              <textarea
+                id="request_body"
+                name="request_body"
+                value={formData.request_body}
+                onChange={handleInputChange}
+                className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
+              />
+              {errors.request_body && (
+                <p className="mt-1 text-xs text-red-500">
+                  {errors.request_body}
+                </p>
+              )}
+            </div>
+          </div>
+
+          <div>
+            <div>
+              <label
+                htmlFor="headers"
+                className="block text-sm font-medium leading-6 text-gray-900"
+              >
+                Headers
+              </label>
+              <div className="mt-2">
+                <input
+                  type="text"
+                  id="headers"
+                  name="headers"
+                  value={formData.headers}
+                  onChange={handleInputChange}
+                  className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
+                />
+                {errors.headers && (
+                  <p className="mt-1 text-xs text-red-500">{errors.headers}</p>
+                )}
+              </div>
+            </div>
+
+            <div>
+              <label
+                htmlFor="token"
+                className="block text-sm font-medium leading-6 text-gray-900"
+              >
+                Token
+              </label>
+              <div className="mt-2">
+                <input
+                  type="text"
+                  id="token"
+                  name="token"
+                  value={formData.token}
+                  onChange={handleInputChange}
+                  className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
+                />
+                {errors.token && (
+                  <p className="mt-1 text-xs text-red-500">{errors.token}</p>
+                )}
+              </div>
+            </div>
+
+            <div>
+              <label
+                htmlFor="scheduled_time"
+                className="block text-sm font-medium leading-6 text-gray-900"
+              >
+                Scheduled Time
+              </label>
+              <div className="mt-2">
+                <input
+                  type="datetime-local"
+                  id="scheduled_time"
+                  name="scheduled_time"
+                  value={formData.scheduled_time}
+                  onChange={handleInputChange}
+                  className={`block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6 ${
+                    errors.scheduled_time && "border-red-500"
+                  }`}
+                />
+                {errors.scheduled_time && (
+                  <p className="mt-1 text-xs text-red-500">
+                    {errors.scheduled_time}
+                  </p>
+                )}
+              </div>
+            </div>
+
+            <div>
+              <label
+                htmlFor="retries"
+                className="block text-sm font-medium leading-6 text-gray-900"
+              >
+                Retries
+              </label>
+              <div className="mt-2">
+                <input
+                  type="number"
+                  id="retries"
+                  name="retries"
+                  value={formData.retries}
+                  onChange={handleInputChange}
+                  className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
+                />
+                {errors.retries && (
+                  <p className="mt-1 text-xs text-red-500">{errors.retries}</p>
+                )}
+              </div>
+            </div>
+
+            <div>
+              <label
+                htmlFor="max_retries"
+                className="block text-sm font-medium leading-6 text-gray-900"
+              >
+                Max Retries
+              </label>
+              <div className="mt-2">
+                <input
+                  type="number"
+                  id="max_retries"
+                  name="max_retries"
+                  value={formData.max_retries}
+                  onChange={handleInputChange}
+                  className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
+                />
+                {errors.max_retries && (
+                  <p className="mt-1 text-xs text-red-500">
+                    {errors.max_retries}
+                  </p>
+                )}
+              </div>
+            </div>
+          </div>
 
           <div>
             <button
